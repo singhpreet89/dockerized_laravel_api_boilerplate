@@ -26,12 +26,14 @@
 5. Node, [node:14.1.0](https://hub.docker.com/_/node)
 6. PHP Artisan
 
-### Steps to Containerise the Laravel application
-1. Install Docker and Composer.
-2. Create a new laravel project using Composer.
-3. Create directories mysql to persist the data, nginx for the laravel configuration
-4. Create Dockerfile, docker-compose.yml and dockerignore files and copying their content from this repository.
-5. Run the containers:
+### Running the Containerized Laravel application
+1. Clone the repository.
+2. Rename the **".env.example"** file in the root directory to **".env"**.
+3. Generate the new application key as follows:
+```bash
+php artisan key:generate
+```
+4. Run the containers:
   - Running the containers in detached mode:
   ```bash
   docker-compose up -d
@@ -44,15 +46,15 @@
   ```bash
   docker-compose up -d --build
   ```
-6. Create Migration and Seed the User's table for demo as follows:
+5. Create Migration and Seed the User's table as follows:
 ```bash
 docker-compose exec php php artisan migrate
 ```
-7. Open any Web browser or Postman to test the API by making GET requests using the following url's:
+6. Open any Web browser or Postman to test the API with the following GET requests:
   - http://localhost:8080/api/users
   - http://localhost:8080/api/users/1
 
-8. Stop and Remove the containers:
+7. Stop and destroy the containers:
 ```bash
 docker-compose down
 ```
@@ -94,4 +96,29 @@ docker images
 docker image rm image-name
 docker image rm image-id
 docker image rm image-id -f
+```
+
+### Steps to Containerize any Laravel application from scratch
+1. Install [Docker](https://www.docker.com/get-started).
+2. Install [Composer](https://getcomposer.org/download/).
+  - NOTE: Locally installed **Composer** is only be used to create the initial laravel project and dockerized environment will actually use the **Composer** container.
+3. Create directories **mysql** and **nginx**.
+4. Create **Dockerfile**, **docker-compose.yml** and **dockerignore** files by copying the content from this repository.
+5. Create a new laravel project using **Composer**.
+6. Run the containers:
+  - Running the containers in detached mode:
+  ```bash
+  docker-compose up -d
+  ```
+  - Run the containers in interactive mode:
+  ```bash
+  docker-compose up -it
+  ```
+  - Rebuild the containers everytime and run in detached mode:
+  ```bash
+  docker-compose up -d --build
+  ```
+7. Stop and destroy the containers:
+```bash
+docker-compose down
 ```
