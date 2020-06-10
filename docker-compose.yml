@@ -1,0 +1,90 @@
+version: "3"
+
+networks:
+  laravel:
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 8080:80
+    volumes:
+      - .:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf # # @Important: Nginx is Not configured by default to read from public/index.php file in the Laravel application so adding a custom Nginx configuration file.
+    depends_on:
+      - php
+      - mysql
+    networks:
+      - laravel
+
+  mysql:
+    image: mysql:5.7.22
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 4306:3306
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_TAGS: dev
+      SERVICE_NAME: ${DB_HOST}
+      # MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    networks:
+      - laravel
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "9000:9000"
+    networks:
+      - laravel
+
+  composer:
+    image: composer:latest
+    container_name: composer
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html # @Override: By default Composer expects all the files inside a different directory.
+    depends_on:
+      - php
+    networks:
+      - laravel
+
+  npm:
+    image: node:14.1.0
+    container_name: npm
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html # @Override: By default Node expects files inside a different directory.
+    entrypoint: ["npm"]
+    networks:
+      - laravel
+
+  artisan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: artisan
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - mysql
+    working_dir: /var/www/html # @Override: By default Artisan expects files inside a different directory
+    entrypoint: ["php", "/var/www/html/artisan"] # Need full path to point to our artisan file when running the artisan command
+    networks:
+      - laravel
